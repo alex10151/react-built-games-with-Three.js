@@ -3,7 +3,10 @@ import Loop from './Loop';
 
 function App() {
   return (
-    <div> <Loop/></div>
+    <React.StrictMode>
+          <div> <Loop/></div>
+    </React.StrictMode>
+
    
     // <div className="App">
     //   <header className="App-header">

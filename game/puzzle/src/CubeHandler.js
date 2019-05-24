@@ -5,25 +5,22 @@ export default class CubeHandler {
         this.cubeList = [];
         this.cubeCounter = 0;
     }
-    createCube(x, y, z) {
+    createCube(x, y, z, axis, wireframe = true) {
         var geo = new THREE.BoxGeometry(x, y, z);
-        var material = new THREE.MeshBasicMaterial({ color: 'blue', wireframe: true });
+        var material = new THREE.MeshBasicMaterial({ color: 0x00ff00, wireframe: wireframe });
         var cube = new THREE.Mesh(geo, material);
         cube.name = 'cube-' + this.cubeCounter++;
         this.cubeList.push({
-            cube:cube,
-            translateX:0,
-            translateY:0,
-            translateZ:0,
+            cube: cube,
+            curAxis: { x: axis.x, y: axis.y, z: axis.z },
         }
-            );
-        return cube;
+        );
+        return this.cubeList[this.cubeList.length + 1];
     }
     removeCube(name) {
         this.cubeList = this.cubeList.filter((cube => cube.cube.name !== name));
     }
     popCubes(number) {
-        console.log('in popup',this.cubeList);
         return this.cubeList.splice(0, number);
     }
 }
