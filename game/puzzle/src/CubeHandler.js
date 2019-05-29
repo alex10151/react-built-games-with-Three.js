@@ -1,26 +1,19 @@
 
 import * as THREE from 'three';
-export default class CubeHandler {
-    constructor() {
-        this.cubeList = [];
-        this.cubeCounter = 0;
-    }
-    createCube(x, y, z, axis, wireframe = true) {
+import BaseHandler from './BaseHandler';
+export default class CubeHandler extends BaseHandler {
+    create(x, y, z, axis, position, wireframe = true) {
         var geo = new THREE.BoxGeometry(x, y, z);
-        var material = new THREE.MeshBasicMaterial({ color: 0x00ff00, wireframe: wireframe });
-        var cube = new THREE.Mesh(geo, material);
-        cube.name = 'cube-' + this.cubeCounter++;
-        this.cubeList.push({
-            cube: cube,
+        var material = new THREE.MeshBasicMaterial({ color: 0x00ffee, wireframe: wireframe });
+        var cube = {
+            cube: new THREE.Mesh(geo, material),
             curAxis: { x: axis.x, y: axis.y, z: axis.z },
+            name: `cube- + ${this.objCounter++}`,
         }
-        );
-        return this.cubeList[this.cubeList.length + 1];
-    }
-    removeCube(name) {
-        this.cubeList = this.cubeList.filter((cube => cube.cube.name !== name));
-    }
-    popCubes(number) {
-        return this.cubeList.splice(0, number);
+        cube.cube.position.x = position.x;
+        cube.cube.position.y = position.y;
+        cube.cube.position.z = position.z;
+        this.objList.push(cube);
+        return cube;
     }
 }
