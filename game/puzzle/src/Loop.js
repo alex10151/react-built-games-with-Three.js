@@ -16,7 +16,6 @@ export default class Loop extends React.Component {
         this.keyUpProcess = this.keyUpProcess.bind(this);
         this.KeyEventKernel = this.KeyEventKernel.bind(this);
         this.keyUpEventKernel = this.keyUpEventKernel.bind(this);
-        this.generateObstacles = this.generateObstacles.bind(this);
         this.jump = this.jump.bind(this);
         // this.componentDidMount = this.componentDidMount.bind(this);
 
@@ -55,45 +54,6 @@ export default class Loop extends React.Component {
         this.camera.position.y = 2;
         console.log('camera', this.camera);
     }
-    generateObstacles(number) {
-        let a = Array.from({ length: number }).map(
-            (x) => setTimeout(() => {
-                var obstacle = this.platform.createCube(1, 1, 1,
-                    {
-                        x: Math.random * 100 - 50,
-                        y: 0,
-                        z: -(Math.random * 100)
-                    },
-                    {
-                        x:0,
-                        y:0,
-                        z:-20,
-                    },
-                    false);
-                console.log('1111111111', obstacle);
-                rxjs.interval(1000).subscribe(
-                    n => {
-                        if (obstacle) {
-                            // if (obstacle.cube.position.z >= 0) {
-                            
-                            // }
-                            obstacle.cube.position.z += 0.1
-                        }
-
-                    }
-                )
-            }, Math.random * 100)
-
-        );
-        console.log('sss', this.platform);
-        // this.obstacle = this.platform.createCube(1, 1, 1, { x: 0, y: 0, z: -10 }, { x: 0, y: 0, z: -10 }, false);
-        // rxjs.interval(100).subscribe(
-        //     n => {
-        //         if (this.obstacle)
-        //             this.obstacle.cube.position.z += (n / 10)
-        //     }
-        // );
-    }
     componentDidMount() {
         this.initRenderer();
         this.platform = this.createPlatform();
@@ -115,17 +75,17 @@ export default class Loop extends React.Component {
     }
     animate() {
         this.timeline++;
-        if (this.timeline === 100) {
-            this.generateObstacles(1);
-            
+        if (this.timeline === 10) {
+            this.platform.generateObstacles(100);
+
         }
         this.platform.addToSceneMany('cube', this.scene);
         // this.generateObstacles(10);
         // this.platform.addToSceneMany('cube', this.scene);
         // console.log('2222',this.platform);
-        if (this.platform.cubeHandler.objList.length === 3) {
-            this.scene.remove(...this.platform.popCubes(1).map(cube => cube.cube));
-        }
+        // if (this.platform.cubeHandler.objList.length === 3) {
+        //     this.scene.remove(...this.platform.popCubes(1).map(cube => cube.cube));
+        // }
         // this.camera.lookAt(new THREE.Vector3(0,0,0));
         this.renderer.render(this.scene, this.camera);
         requestAnimationFrame(this.animate);
