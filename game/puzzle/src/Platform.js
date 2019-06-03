@@ -1,14 +1,60 @@
 import * as rxjs from 'rxjs';
+import * as THREE from 'three';
+import { TimelineMax, SlowMo, Bounce, Power1, Expo, Back, Elastic } from "gsap/TweenMax";
 export default class Platform {
-    constructor(cubeHandler, planeHandler, pathHandler) {
+    constructor(cubeHandler, planeHandler, sphereHandler) {
         this.cubeHandler = cubeHandler;
-        this.pathHandler = pathHandler;
+        // this.pathHandler = pathHandler;
         this.planeHandler = planeHandler;
+        this.sphereHandler = sphereHandler;
     }
-    createPath() {
+    createAnimation(mesh, type) {
+        var jumpAnimation = (mesh) => {
+            var tl = new TimelineMax({
+                yoyo: true
+            });
 
+            tl.to(mesh.position, 0.5, {
+                y: 5,
+                ease: Power1.easeOut,
+            })
+            tl.to(mesh.position, 1, {
+                y: 0,
+                ease: Bounce.easeOut,
+                // onComplete: rollAnimation,
+                // onCompleteParams: [mesh, 'roll'],
+            })
+            return tl;
+        }
+        var rollAnimation = () => {
+            var tl = new TimelineMax({
+                // yoyo: trues
+            });
+
+            tl.to(mesh.position, 5, {
+                z: 50,
+                // ease: Bounce.easeOut,
+                ease: Power1.easeIn,
+            })
+            return tl;
+        }
+        if (type === 'jump') {
+            return jumpAnimation(mesh);
+        }
+        if (type === 'roll') {
+            return rollAnimation(mesh);
+        }
+
+        // mainTimeLine.to(tl, 2, {
+        //     progress: 1,
+        //     ease: Bounce.easeIn,
+        //     onComplete: this.createAnimation,
+        //     onCompleteParams: [mesh,mainTimeLine],
+        //     delay: THREE.Math.randFloat(0, 0.8)
+        // }, mainTimeLine.time());
     }
-    generateObstacles(number) {
+
+    generateObstacles(number, animateFunc) {
         return Array.from({ length: number }).map(
             (x) => setTimeout(() => {
                 var obstacle = this.createCube(1, 1, 1,
@@ -23,18 +69,18 @@ export default class Platform {
                         z: -Math.random() * 30,
                     },
                     false);
-                console.log('1111111111', obstacle);
-                rxjs.interval(100).subscribe(
-                    n => {
-                        if (obstacle) {
-                            // if (obstacle.cube.position.z >= 0) {
+                animateFunc(obstacle.object);
+                // rxjs.interval(100).subscribe(
+                //     n => {
+                //         if (obstacle) {
+                //             // if (obstacle.cube.position.z >= 0) {
 
-                            // }
-                            obstacle.cube.position.z += 0.5
-                        }
+                //             // }
+                //             obstacle.object.position.z += 0.5
+                //         }
 
-                    }
-                )
+                //     }
+                // )
             }, Math.random() * 100000)
 
         );
@@ -50,29 +96,36 @@ export default class Platform {
         if (name === 'cube') {
             return this.cubeHandler.objList.map(translateFunc);
         }
-        if (name === 'path') {
-            return this.pathHandler.objList.map(translateFunc);
-        }
+        // if (name === 'path') {
+        //     return this.pathHandler.objList.map(translateFunc);
+        // }
 
         if (name === 'plane') {
             return this.planeHandler.objList.map(translateFunc);
+        }
+        if (name === 'sphere') {
+            return this.sphereHandler.objList.map(translateFunc);
         }
     }
     addToSceneMany(name, scene) {
         if (name === 'cube') {
             return this.cubeHandler.objList.map((cube) =>
-                scene.add(cube.cube)
+                scene.add(cube.object)
             );
         }
-        if (name === 'path') {
-            return this.pathHandler.objList.map((obj) =>
-                scene.add(obj)
-            );
-        }
+        // if (name === 'path') {
+        //     return this.pathHandler.objList.map((obj) =>
+        //         scene.add(obj)
+        //     );
+        // }
         if (name === 'plane') {
             return this.planeHandler.objList.map((obj) =>
                 scene.add(obj)
             );
+        }
+        if (name === 'sphere') {
+            return this.sphereHandler.objList.map((shpere) =>
+                scene.add(shpere.object));
         }
     }
     createPlane(width, height, x, y, z) {
@@ -81,6 +134,11 @@ export default class Platform {
     createCube(x = 1, y = 1, z = 1, axis, position, wired = true) {
         if (this.cubeHandler)
             return this.cubeHandler.create(x, y, z, axis, position, wired);
+    }
+    createSphere(radius, widthSeg, heightSeg, axis, position) {
+        if (this.sphereHandler) {
+            return this.sphereHandler.create(radius, widthSeg, heightSeg, axis, position);
+        }
     }
     removeCube(name) {
         if (this.cubeHandler)
