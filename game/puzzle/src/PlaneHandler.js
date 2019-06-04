@@ -5,7 +5,8 @@ import * as THREE from 'three';
 export default class PlaneHandler extends BaseHandler {
     create(width, height, x, y, z) {
         var plane = new THREE.PlaneGeometry(width, height);
-        var normalMaterial = new THREE.MeshNormalMaterial();
+        var normalMaterial = new THREE.MeshNormalMaterial(
+        );
         normalMaterial.side = THREE.DoubleSide;
         // var basicMaterial = new THREE.MeshBasicMaterial();
         // basicMaterial.wireframe = true;
@@ -23,6 +24,7 @@ export default class PlaneHandler extends BaseHandler {
         mesh.receiveShadow = true;
         this.objList.push(mesh);
         this.objCounter++;
+        console.log('asdsadsad',mesh);
         return mesh;
     }
 }

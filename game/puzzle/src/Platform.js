@@ -1,5 +1,5 @@
 
-import { TimelineMax, Bounce, Power1 } from "gsap/TweenMax";
+import { TimelineMax, Bounce, Power1, Power2, Elastic, Power4 } from "gsap/TweenMax";
 export default class Platform {
     constructor(cubeHandler, planeHandler, sphereHandler) {
         this.cubeHandler = cubeHandler;
@@ -29,15 +29,20 @@ export default class Platform {
             var tl = new TimelineMax({
                 // yoyo: trues
             });
-            var ease = Power1.easeInOut;
+            const delayHorizontal = 2;
+            const delayVertical = 2;
+
+            var delay = (direction === 'w' || direction === 's') ? delayVertical : delayHorizontal;
+            var ease = (direction === 'w' || direction === 's') ? Power4.easeOut : Power2.easeOut;
             var config = {
                 ease: ease,
                 // onComplete: rollAnimation,
                 // onCompleteParams: [mesh],
+                x: direction === 'a' ? mesh.position.x - 10 : direction === 'd' ? mesh.position.x + 10 : null,
+                z: direction === 'w' ? mesh.position.z - 10 : direction === 's' ? mesh.position.z + 10 : null,
             }
-            direction === 'a' ? (config.x = mesh.position.x - 5) : ((direction === 'd') ?
-                (config.x = mesh.position.x + 5) : ((direction === 'w') ? (config.z = mesh.position.z - 5) : (config.z = mesh.position.z + 5)));
-            tl.to(mesh.position, 1, config);
+            console.log('log', delay);
+            tl.to(mesh.position, delay, config);
             return tl;
         }
         var rollAnimation = (mesh) => {

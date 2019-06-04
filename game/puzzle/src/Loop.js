@@ -34,6 +34,8 @@ export default class Loop extends React.Component {
         this.intervalJump = null;
         this.jumpTimeLine = null;
         this.mainRollTimeLine = null;
+        this.mainControlTimeLine = null;
+        this.rollTimeout = null;
         // this.jumpFunc = (x) => -2 * x + 1;
         this.jumpFunc = (x) => Math.cos(1 / Math.PI * x);
 
@@ -76,13 +78,13 @@ export default class Loop extends React.Component {
         this.scene.add(spot);
     }
     setCamera(position) {
-        console.log('ddd', position);
         this.camera.position.x = position.x;
         this.camera.position.y = position.y;
         this.camera.position.z = position.z;
     }
     componentDidMount() {
         this.initRenderer();
+        this.initLight();
         this.loopCounter = 0;
         this.platform = this.createPlatform();
         this.mainPlane = this.platform.createPlane(30, 300, 1 / 2 * Math.PI, 0, 0);
@@ -106,8 +108,11 @@ export default class Loop extends React.Component {
             this.platform.generateObstacles(100, (mesh) => this.platform.createAnimation(mesh, 'roll'));
         this.platform.addToSceneMany('cube', this.scene);
 
-        if (!this.mainRollTimeLine && this.mainObj.object.position.y === 0) {
-            setTimeout(() => this.mainRollTimeLine = this.roll(this.mainObj), 1000);
+        if (!this.rollTimeout && !this.mainRollTimeLine && this.mainObj.object.position.y === 0) {
+            this.rollTimeout = setTimeout(() => {
+                this.mainRollTimeLine = this.roll(this.mainObj);
+                this.rollTimeout = null;
+            }, 2000);
         }
 
         // this.generateObstacles(10);
@@ -180,24 +185,29 @@ export default class Loop extends React.Component {
             this.mainRollTimeLine.kill();
             this.mainRollTimeLine = null;
         }
+        if (this.mainControlTimeLine) {
+            this.mainControlTimeLine.kill();
+            this.mainControlTimeLine = null;
+        }
         if (key === 'a') {
-            this.control(this.mainObj, 'a');
+
+            this.mainControlTimeLine = this.control(this.mainObj, 'a');
             // increaseAxis(this.mainObj.curAxis, [-0.3]);
             // this.platform.translatorWithValue(this.mainObj.object, this.mainObj.curAxis, this.translateInterval / 100);
         }
         if (key === 'd') {
-            this.control(this.mainObj, 'd');
+            this.mainControlTimeLine = this.control(this.mainObj, 'd');
             // increaseAxis(this.mainObj.curAxis, [0.3]);
             // this.platform.translatorWithValue(this.mainObj.object, this.mainObj.curAxis, this.translateInterval / 100);
         }
         if (key === 'w') {
             // this.camera.position.z += 1;
-            this.control(this.mainObj, 'w');
+            this.mainControlTimeLine = this.control(this.mainObj, 'w');
             // increaseAxis(this.mainObj.curAxis, [-0.3], false, false, true);
             // this.platform.translatorWithValue(this.mainObj.object, this.mainObj.curAxis, this.translateInterval / 100);
         }
         if (key === 's') {
-            this.control(this.mainObj, 's');
+            this.mainControlTimeLine = this.control(this.mainObj, 's');
             // this.camera.position.z -= 1;
             // increaseAxis(this.mainObj.curAxis, [0.3], false, false, true);
             // this.platform.translatorWithValue(this.mainObj.object, this.mainObj.curAxis, this.translateInterval / 100);
