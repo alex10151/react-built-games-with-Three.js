@@ -8,7 +8,10 @@ import * as operator from 'rxjs/operators';
 import PlaneHandler from './PlaneHandler';
 import { increaseAxis, resetAxis } from './utils';
 import SphereHandler from './sphereHandler';
-import { TimelineMax } from 'gsap/TweenMax';
+import Physijs from './Physijs/physi';
+Physijs.scripts.worker = './Physijs/physijs_worker.js';
+Physijs.scripts.ammo = './Physijs/ammo.js';
+
 export default class Loop extends React.Component {
     constructor(props) {
         super(props);
@@ -58,9 +61,9 @@ export default class Loop extends React.Component {
         this.renderer.shadowMap.enabled = true;
         this.renderer.setSize(window.innerWidth, window.innerHeight);
         this.canvasRef.appendChild(this.renderer.domElement);
-        // this.renderer2 = new THREE.WebGLRenderer();
-        // document.body.appendChild(this.renderer2.domElement);
-        this.scene = new THREE.Scene();
+        // this.scene = new THREE.Scene();
+        this.scene = new Physijs.Scene();
+
         this.camera = new THREE.PerspectiveCamera(45, window.innerWidth / window.innerHeight, 0.1, 1000);
         // this.camera = new THREE.OrthographicCamera(window.innerWidth / 16, window.innerWidth / 16, window.innerWidth / 16, window.innerWidth / 16, -200, 500);
         this.setCamera({ x: -30, y: 30, z: 30 });
@@ -112,7 +115,7 @@ export default class Loop extends React.Component {
             this.rollTimeout = setTimeout(() => {
                 this.mainRollTimeLine = this.roll(this.mainObj);
                 this.rollTimeout = null;
-            }, 2000);
+            }, 1000);
         }
 
         // this.generateObstacles(10);
@@ -123,6 +126,7 @@ export default class Loop extends React.Component {
         // }
         // this.camera.lookAt(new THREE.Vector3(0,0,0));
         this.renderer.render(this.scene, this.camera);
+        this.scene.simulate();
         requestAnimationFrame(this.animate);
     }
     keyProcess(event) {
@@ -225,8 +229,8 @@ export default class Loop extends React.Component {
     }
     render() {
         return (
-
             <div ref={this.setRef}>
+                <script type="text/javascript" src="physi.js"></script>
                 <h1>this is the main canvas:</h1>
             </div>);
     };

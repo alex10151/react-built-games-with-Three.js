@@ -1,12 +1,23 @@
 
 import * as THREE from 'three';
 import BaseHandler from './BaseHandler';
+import Physijs from './Physijs/physi';
+Physijs.scripts.worker = './Physijs/physijs_worker.js';
+Physijs.scripts.ammo = './Physijs/ammo.js';
 export default class CubeHandler extends BaseHandler {
     create(x, y, z, axis, position, wireframe = true) {
+        // var colorCube= scale(Math.random()).hex();
         var geo = new THREE.BoxGeometry(x, y, z);
-        var material = new THREE.MeshBasicMaterial({ color: 0x00ffee, wireframe: wireframe });
+        // var material = new THREE.MeshBasicMaterial({ color: 0x00ffee, wireframe: wireframe });
+        var material = Physijs.createMaterial(
+            new THREE.MeshPhongMaterial({
+                color: 0x00ffee,
+                opacity: 0.8,
+                transparent: true
+            }),
+        )
         var cube = {
-            object: new THREE.Mesh(geo, material),
+            object: new Physijs.BoxMesh(geo, material),
             curAxis: { x: axis.x, y: axis.y, z: axis.z },
             name: `cube- + ${this.objCounter++}`,
         }

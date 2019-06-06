@@ -41,7 +41,6 @@ export default class Platform {
                 x: direction === 'a' ? mesh.position.x - 10 : direction === 'd' ? mesh.position.x + 10 : null,
                 z: direction === 'w' ? mesh.position.z - 10 : direction === 's' ? mesh.position.z + 10 : null,
             }
-            console.log('log', delay);
             tl.to(mesh.position, delay, config);
             return tl;
         }
