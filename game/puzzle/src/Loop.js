@@ -8,7 +8,10 @@ import * as operator from 'rxjs/operators';
 import PlaneHandler from './PlaneHandler';
 import { increaseAxis, resetAxis } from './utils';
 import SphereHandler from './sphereHandler';
-import { TimelineMax } from 'gsap/TweenMax';
+import Physijs from './Physijs/physi';
+Physijs.scripts.worker = './Physijs/physijs_worker.js';
+Physijs.scripts.ammo = './Physijs/ammo.js';
+
 export default class Loop extends React.Component {
     constructor(props) {
         super(props);
@@ -22,7 +25,7 @@ export default class Loop extends React.Component {
         this.initLight = this.initLight.bind(this);
         this.jump = this.jump.bind(this);
         this.jumpNew = this.jumpNew.bind(this);
-        this.decline = this.decline.bind(this);
+        this.control = this.control.bind(this);
         // this.componentDidMount = this.componentDidMount.bind(this);
 
         // document.onkeypress = this.keyProcess;
@@ -32,7 +35,10 @@ export default class Loop extends React.Component {
 
         this.translateInterval = 200;
         this.intervalJump = null;
-        this.mainObjRollTimeLine = null;
+        this.jumpTimeLine = null;
+        this.mainRollTimeLine = null;
+        this.mainControlTimeLine = null;
+        this.rollTimeout = null;
         // this.jumpFunc = (x) => -2 * x + 1;
         this.jumpFunc = (x) => Math.cos(1 / Math.PI * x);
 
@@ -55,13 +61,13 @@ export default class Loop extends React.Component {
         this.renderer.shadowMap.enabled = true;
         this.renderer.setSize(window.innerWidth, window.innerHeight);
         this.canvasRef.appendChild(this.renderer.domElement);
-        // this.renderer2 = new THREE.WebGLRenderer();
-        // document.body.appendChild(this.renderer2.domElement);
-        this.scene = new THREE.Scene();
+        // this.scene = new THREE.Scene();
+        this.scene = new Physijs.Scene();
+
         this.camera = new THREE.PerspectiveCamera(45, window.innerWidth / window.innerHeight, 0.1, 1000);
         // this.camera = new THREE.OrthographicCamera(window.innerWidth / 16, window.innerWidth / 16, window.innerWidth / 16, window.innerWidth / 16, -200, 500);
         this.setCamera({ x: -30, y: 30, z: 30 });
-        this.camera.lookAt(0, 0, 0);
+        this.camera.lookAt(0, 0, 10);
         console.log('camera', this.camera);
     }
     initLight() {
@@ -75,13 +81,13 @@ export default class Loop extends React.Component {
         this.scene.add(spot);
     }
     setCamera(position) {
-        console.log('ddd', position);
         this.camera.position.x = position.x;
         this.camera.position.y = position.y;
         this.camera.position.z = position.z;
     }
     componentDidMount() {
         this.initRenderer();
+        this.initLight();
         this.loopCounter = 0;
         this.platform = this.createPlatform();
         this.mainPlane = this.platform.createPlane(30, 300, 1 / 2 * Math.PI, 0, 0);
@@ -105,6 +111,12 @@ export default class Loop extends React.Component {
             this.platform.generateObstacles(100, (mesh) => this.platform.createAnimation(mesh, 'roll'));
         this.platform.addToSceneMany('cube', this.scene);
 
+        if (!this.rollTimeout && !this.mainRollTimeLine && this.mainObj.object.position.y === 0) {
+            this.rollTimeout = setTimeout(() => {
+                this.mainRollTimeLine = this.roll(this.mainObj);
+                this.rollTimeout = null;
+            }, 1000);
+        }
 
         // this.generateObstacles(10);
         // this.platform.addToSceneMany('cube', this.scene);
@@ -114,6 +126,7 @@ export default class Loop extends React.Component {
         // }
         // this.camera.lookAt(new THREE.Vector3(0,0,0));
         this.renderer.render(this.scene, this.camera);
+        this.scene.simulate();
         requestAnimationFrame(this.animate);
     }
     keyProcess(event) {
@@ -124,14 +137,14 @@ export default class Loop extends React.Component {
         event.preventDefault();
         return this.$keyUpSubject.next(event.key);
     }
-    decline() {
-
-    }
     jumpNew(obj) {
         return this.platform.createAnimation(obj.object, 'jump');
     }
     roll(obj) {
         return this.platform.createAnimation(obj.object, 'roll');
+    }
+    control(obj, type) {
+        return this.platform.createAnimation(obj.object, 'control', type);
     }
     jump(obj, value, jumpFunc, interval) {
         if (this.intervalJump !== null) {
@@ -172,29 +185,43 @@ export default class Loop extends React.Component {
     }
     KeyEventKernel(key) {
 
+        if (this.mainRollTimeLine) {
+            this.mainRollTimeLine.kill();
+            this.mainRollTimeLine = null;
+        }
+        if (this.mainControlTimeLine) {
+            this.mainControlTimeLine.kill();
+            this.mainControlTimeLine = null;
+        }
         if (key === 'a') {
-            increaseAxis(this.mainObj.curAxis, [-0.3]);
-            this.platform.translatorWithValue(this.mainObj.object, this.mainObj.curAxis, this.translateInterval / 100);
+
+            this.mainControlTimeLine = this.control(this.mainObj, 'a');
+            // increaseAxis(this.mainObj.curAxis, [-0.3]);
+            // this.platform.translatorWithValue(this.mainObj.object, this.mainObj.curAxis, this.translateInterval / 100);
         }
         if (key === 'd') {
-            increaseAxis(this.mainObj.curAxis, [0.3]);
-            this.platform.translatorWithValue(this.mainObj.object, this.mainObj.curAxis, this.translateInterval / 100);
+            this.mainControlTimeLine = this.control(this.mainObj, 'd');
+            // increaseAxis(this.mainObj.curAxis, [0.3]);
+            // this.platform.translatorWithValue(this.mainObj.object, this.mainObj.curAxis, this.translateInterval / 100);
         }
         if (key === 'w') {
             // this.camera.position.z += 1;
-            if (this.mainObjRollTimeLine)
-                this.mainObjRollTimeLine.kill();
-            increaseAxis(this.mainObj.curAxis, [-0.3], false, false, true);
-            this.platform.translatorWithValue(this.mainObj.object, this.mainObj.curAxis, this.translateInterval / 100);
+            this.mainControlTimeLine = this.control(this.mainObj, 'w');
+            // increaseAxis(this.mainObj.curAxis, [-0.3], false, false, true);
+            // this.platform.translatorWithValue(this.mainObj.object, this.mainObj.curAxis, this.translateInterval / 100);
         }
         if (key === 's') {
+            this.mainControlTimeLine = this.control(this.mainObj, 's');
             // this.camera.position.z -= 1;
-            increaseAxis(this.mainObj.curAxis, [0.3], false, false, true);
-            this.platform.translatorWithValue(this.mainObj.object, this.mainObj.curAxis, this.translateInterval / 100);
+            // increaseAxis(this.mainObj.curAxis, [0.3], false, false, true);
+            // this.platform.translatorWithValue(this.mainObj.object, this.mainObj.curAxis, this.translateInterval / 100);
         }
         if (key === ' ') {
-            this.jumpNew(this.mainObj);
-            this.mainObjRollTimeLine = this.roll(this.mainObj);
+            if (this.jumpTimeLine)
+                return null;
+            this.jumpTimeLine = this.jumpNew(this.mainObj);
+            this.jumpTimeLine.addCallback(() => this.jumpTimeLine = null);
+            // this.mainObjRollTimeLine = this.roll(this.mainObj);
 
             // this.jump(this.mainObj, 0.2, this.jumpFunc, 100);
         }
@@ -202,8 +229,8 @@ export default class Loop extends React.Component {
     }
     render() {
         return (
-
             <div ref={this.setRef}>
+                <script type="text/javascript" src="physi.js"></script>
                 <h1>this is the main canvas:</h1>
             </div>);
     };

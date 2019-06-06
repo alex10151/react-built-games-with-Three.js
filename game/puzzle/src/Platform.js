@@ -1,6 +1,5 @@
-import * as rxjs from 'rxjs';
-import * as THREE from 'three';
-import { TimelineMax, SlowMo, Bounce, Power1, Expo, Back, Elastic } from "gsap/TweenMax";
+
+import { TimelineMax, Bounce, Power1, Power2, Elastic, Power4 } from "gsap/TweenMax";
 export default class Platform {
     constructor(cubeHandler, planeHandler, sphereHandler) {
         this.cubeHandler = cubeHandler;
@@ -8,7 +7,7 @@ export default class Platform {
         this.planeHandler = planeHandler;
         this.sphereHandler = sphereHandler;
     }
-    createAnimation(mesh, type) {
+    createAnimation(mesh, type, direction) {
         var jumpAnimation = (mesh) => {
             var tl = new TimelineMax({
                 yoyo: true
@@ -26,7 +25,26 @@ export default class Platform {
             })
             return tl;
         }
-        var rollAnimation = () => {
+        var controlAnimation = (mesh, direction) => {
+            var tl = new TimelineMax({
+                // yoyo: trues
+            });
+            const delayHorizontal = 2;
+            const delayVertical = 2;
+
+            var delay = (direction === 'w' || direction === 's') ? delayVertical : delayHorizontal;
+            var ease = (direction === 'w' || direction === 's') ? Power4.easeOut : Power2.easeOut;
+            var config = {
+                ease: ease,
+                // onComplete: rollAnimation,
+                // onCompleteParams: [mesh],
+                x: direction === 'a' ? mesh.position.x - 10 : direction === 'd' ? mesh.position.x + 10 : null,
+                z: direction === 'w' ? mesh.position.z - 10 : direction === 's' ? mesh.position.z + 10 : null,
+            }
+            tl.to(mesh.position, delay, config);
+            return tl;
+        }
+        var rollAnimation = (mesh) => {
             var tl = new TimelineMax({
                 // yoyo: trues
             });
@@ -44,14 +62,9 @@ export default class Platform {
         if (type === 'roll') {
             return rollAnimation(mesh);
         }
-
-        // mainTimeLine.to(tl, 2, {
-        //     progress: 1,
-        //     ease: Bounce.easeIn,
-        //     onComplete: this.createAnimation,
-        //     onCompleteParams: [mesh,mainTimeLine],
-        //     delay: THREE.Math.randFloat(0, 0.8)
-        // }, mainTimeLine.time());
+        if (type === 'control' && (direction === 'a' || 'w' || 'd' || 's')) {
+            return controlAnimation(mesh, direction);
+        }
     }
 
     generateObstacles(number, animateFunc) {
@@ -70,27 +83,9 @@ export default class Platform {
                     },
                     false);
                 animateFunc(obstacle.object);
-                // rxjs.interval(100).subscribe(
-                //     n => {
-                //         if (obstacle) {
-                //             // if (obstacle.cube.position.z >= 0) {
-
-                //             // }
-                //             obstacle.object.position.z += 0.5
-                //         }
-
-                //     }
-                // )
             }, Math.random() * 100000)
 
         );
-        // this.obstacle = this.platform.createCube(1, 1, 1, { x: 0, y: 0, z: -10 }, { x: 0, y: 0, z: -10 }, false);
-        // rxjs.interval(100).subscribe(
-        //     n => {
-        //         if (this.obstacle)
-        //             this.obstacle.cube.position.z += (n / 10)
-        //     }
-        // );
     }
     translateMany(name, translateFunc) {
         if (name === 'cube') {
